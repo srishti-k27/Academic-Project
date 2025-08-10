@@ -1,0 +1,1180 @@
+# PART 1 :  Simulation of the Einstein Model – the GBM
+
+library(readxl)
+Stock_Prices_1 <- read_excel("~/Downloads/Stock Prices 1.xls")
+View(Stock_Prices_1)
+library(tidyverse)
+library(zoo)
+library(tseries)
+library(FinTS)
+library(tidyverse)
+library(zoo)
+library(tseries)
+library(FinTS)
+# Set up
+stock_cols <- names(raw_data)[names(raw_data) != "Date"]
+view(header)
+head(raw_data)
+# Install the readxl package if not already installed
+install.packages("readxl")
+# Load the library
+library(readxl)
+# Read the Excel file (adjust the path if needed)
+raw_data <- read_excel("/Users/srishtikhanna/Downloads/Stock Prices 1.xls")
+# View the first few rows
+head(raw_data)
+# For raw price data
+price_data <- price_data %>% arrange(Date)
+library(dplyr)
+# Sort oldest to newest
+price_data <- price_data %>% arrange(Date)
+raw_data <- read_excel("/Users/srishtikhanna/Downloads/Stock Prices 1.xls")
+install.packages("readxl")
+library(readxl)
+raw_data <- read_excel("/Users/srishtikhanna/Downloads/Stock Prices 1.xls")
+# Sort oldest to newest
+price_data <- price_data %>% arrange(Date)
+install.packages("readxl")   # Install the package if not installed
+install.packages("dplyr")    # Ensure dplyr is installed
+library(readxl)              # Load the readxl package
+library(dplyr)               # Load dplyr
+raw_data <- read_excel("/Users/srishtikhanna/Downloads/Stock Prices 1.xls")
+install.packages("readxl")
+library(readxl)
+raw_data <- read_excel("/Users/srishtikhanna/Downloads/Stock Prices 1.xls")
+# Sort the data by Date
+price_data <- price_data %>% arrange(Date)
+# Sort the data by Date
+price_data <- price_data %>% arrange(Date)
+library(dplyr)
+# Sort the data by Date
+Stock_Prices_1 <- Stock_Prices_1 %>% arrange(Date)
+# Define cleaning functions
+remove_outliers_iqr <- function(series) {
+Q1 <- quantile(series, 0.25, na.rm = TRUE)
+Q3 <- quantile(series, 0.75, na.rm = TRUE)
+IQR <- Q3 - Q1
+lower <- Q1 - 1.5 * IQR
+upper <- Q3 + 1.5 * IQR
+series[series < lower | series > upper] <- NA
+return(series)
+}
+remove_outliers_zscore <- function(series, threshold = 3) {
+z_scores <- (series - mean(series, na.rm = TRUE)) / sd(series, na.rm = TRUE)
+series[abs(z_scores) > threshold] <- NA
+return(series)
+}
+# Clean the raw price data
+stock_cols <- names(Stock_Prices_1)[names(Stock_Prices_1) != "Date"]
+Stock_Prices_1[stock_cols] <- lapply(Stock_Prices_1[stock_cols], remove_outliers_iqr)
+Stock_Prices_1[stock_cols] <- lapply(Stock_Prices_1[stock_cols], remove_outliers_zscore)
+# Remove rows with NA values after cleaning
+Stock_Prices_1 <- Stock_Prices_1 %>% drop_na()
+library(tidyr)
+# Remove rows with NA values after cleaning
+Stock_Prices_1 <- Stock_Prices_1 %>% drop_na()
+# Create an empty log returns data frame
+log_returns <- Stock_Prices_1
+# Calculate log returns for each stock
+for (col in stock_cols) {
+log_returns[[col]] <- c(NA, diff(log(Stock_Prices_1[[col]])))
+}
+# Drop rows with NA values in log returns
+log_returns <- log_returns %>% drop_na()
+# Ensure the data is ordered by Date
+log_returns <- log_returns %>% arrange(Date)
+# View the first few rows of the log returns
+head(log_returns)
+# Function to remove outliers using IQR method
+remove_outliers_iqr_log <- function(series) {
+Q1 <- quantile(series, 0.25, na.rm = TRUE)
+Q3 <- quantile(series, 0.75, na.rm = TRUE)
+IQR <- Q3 - Q1
+lower <- Q1 - 1.5 * IQR
+upper <- Q3 + 1.5 * IQR
+series[series < lower | series > upper] <- NA
+return(series)
+}
+# Apply IQR cleaning to log returns
+log_returns[stock_cols] <- lapply(log_returns[stock_cols], remove_outliers_iqr_log)
+# Function to remove outliers using Z-score method
+remove_outliers_zscore_log <- function(series, threshold = 3) {
+z_scores <- (series - mean(series, na.rm = TRUE)) / sd(series, na.rm = TRUE)
+series[abs(z_scores) > threshold] <- NA
+return(series)
+}
+# Apply Z-score cleaning to log returns
+log_returns[stock_cols] <- lapply(log_returns[stock_cols], remove_outliers_zscore_log)
+# Remove rows with NA values from log returns
+log_returns <- log_returns %>% drop_na()
+# View cleaned log returns
+head(log_returns)
+check_assumptions <- function(stock) {
+cat("\n\nChecking assumptions for stock:", stock, "\n\n")
+# Normality test
+norm_test <- shapiro.test(log_returns[[stock]])
+print(norm_test)
+# Ljung-Box test for independence
+lb_test <- Box.test(log_returns[[stock]], lag = 20, type = "Ljung-Box")
+print(lb_test)
+# Constant Mean test
+roll_mean <- rollapply(log_returns[[stock]], width = 50, FUN = mean, fill = NA, align = "right")
+mean_volatility <- sd(na.omit(roll_mean))
+cat("Constant Mean Volatility:", mean_volatility, "\n")
+# Constant Volatility test
+roll_sd <- rollapply(log_returns[[stock]], width = 50, FUN = sd, fill = NA, align = "right")
+vol_volatility <- sd(na.omit(roll_sd))
+cat("Constant Volatility:", vol_volatility, "\n")
+# ARCH test for heteroskedasticity
+arch_test <- ArchTest(log_returns[[stock]], lags = 12)
+print(arch_test)
+# ADF test for stationarity
+adf_test <- adf.test(log_returns[[stock]])
+print(adf_test)
+# Identically Distributed check (Mean and SD stability)
+roll_mean <- rollapply(log_returns[[stock]], width = 50, FUN = mean, fill = NA, align = "right")
+roll_sd <- rollapply(log_returns[[stock]], width = 50, FUN = sd, fill = NA, align = "right")
+mean_volatility <- sd(na.omit(roll_mean))
+vol_volatility <- sd(na.omit(roll_sd))
+cat("Identically Distributed Check - Mean Volatility:", mean_volatility, "\n")
+cat("Identically Distributed Check - SD Volatility:", vol_volatility, "\n")
+}
+# Now, check assumptions for one stock (e.g., "PAGE")
+check_assumptions("PAGE")
+install.packages("zoo")
+library(zoo)
+check_assumptions <- function(stock) {
+cat("\n\nChecking assumptions for stock:", stock, "\n\n")
+# Normality test
+norm_test <- shapiro.test(log_returns[[stock]])
+print(norm_test)
+# Ljung-Box test for independence
+lb_test <- Box.test(log_returns[[stock]], lag = 20, type = "Ljung-Box")
+print(lb_test)
+# Constant Mean test
+roll_mean <- rollapply(log_returns[[stock]], width = 50, FUN = mean, fill = NA, align = "right")
+mean_volatility <- sd(na.omit(roll_mean))
+cat("Constant Mean Volatility:", mean_volatility, "\n")
+# Constant Volatility test
+roll_sd <- rollapply(log_returns[[stock]], width = 50, FUN = sd, fill = NA, align = "right")
+vol_volatility <- sd(na.omit(roll_sd))
+cat("Constant Volatility:", vol_volatility, "\n")
+# ARCH test for heteroskedasticity
+arch_test <- ArchTest(log_returns[[stock]], lags = 12)
+print(arch_test)
+# ADF test for stationarity
+adf_test <- adf.test(log_returns[[stock]])
+print(adf_test)
+# Identically Distributed check (Mean and SD stability)
+roll_mean <- rollapply(log_returns[[stock]], width = 50, FUN = mean, fill = NA, align = "right")
+roll_sd <- rollapply(log_returns[[stock]], width = 50, FUN = sd, fill = NA, align = "right")
+mean_volatility <- sd(na.omit(roll_mean))
+vol_volatility <- sd(na.omit(roll_sd))
+cat("Identically Distributed Check - Mean Volatility:", mean_volatility, "\n")
+cat("Identically Distributed Check - SD Volatility:", vol_volatility, "\n")
+}
+# Now, check assumptions for one stock (e.g., "PAGE")
+check_assumptions("PAGE")
+install.packages("FinTS")
+library(FinTS)
+# ARCH test for heteroskedasticity (lags = 12)
+arch_test_result <- ArchTest(log_returns[[stock]], lags = 12)
+# Normality test (Shapiro-Wilk) for 'PAGE' log returns
+normality_test <- shapiro.test(log_returns$PAGE)
+print(normality_test)
+# Ljung-Box test for 'PAGE' log returns (20 lags)
+independence_test <- Box.test(log_returns$PAGE, lag = 20, type = "Ljung-Box")
+print(independence_test)
+# Rolling mean of log returns for 'PAGE'
+library(zoo)
+roll_mean <- rollapply(log_returns$PAGE, width = 50, FUN = mean, fill = NA, align = "right")
+mean_volatility <- sd(na.omit(roll_mean))
+print(mean_volatility)
+# Rolling standard deviation of log returns for 'PAGE'
+roll_sd <- rollapply(log_returns$PAGE, width = 50, FUN = sd, fill = NA, align = "right")
+vol_volatility <- sd(na.omit(roll_sd))
+print(vol_volatility)
+library(FinTS)
+# ARCH test for 'PAGE' log returns
+arch_test <- ArchTest(log_returns$PAGE, lags = 12)
+print(arch_test)
+library(tseries)
+# ADF test for 'PAGE' log returns
+adf_test <- adf.test(log_returns$PAGE)
+print(adf_test)
+# Rolling mean and standard deviation for 'PAGE'
+roll_mean <- rollapply(log_returns$PAGE, width = 50, FUN = mean, fill = NA, align = "right")
+roll_sd <- rollapply(log_returns$PAGE, width = 50, FUN = sd, fill = NA, align = "right")
+# Check if the mean and SD are constant over time
+mean_volatility <- sd(na.omit(roll_mean))
+vol_volatility <- sd(na.omit(roll_sd))
+print(mean_volatility)  # Should be small if constant
+print(vol_volatility)   # Should be small if constant
+check_assumptions <- function(stock) {
+cat("\n\nChecking assumptions for stock:", stock, "\n\n")
+# Normality test
+norm_test <- shapiro.test(log_returns[[stock]])
+print(norm_test)
+# Ljung-Box test for independence
+lb_test <- Box.test(log_returns[[stock]], lag = 20, type = "Ljung-Box")
+print(lb_test)
+# Constant Mean test
+roll_mean <- rollapply(log_returns[[stock]], width = 50, FUN = mean, fill = NA, align = "right")
+mean_volatility <- sd(na.omit(roll_mean))
+cat("Constant Mean Volatility:", mean_volatility, "\n")
+# Constant Volatility test
+roll_sd <- rollapply(log_returns[[stock]], width = 50, FUN = sd, fill = NA, align = "right")
+vol_volatility <- sd(na.omit(roll_sd))
+cat("Constant Volatility:", vol_volatility, "\n")
+# ARCH test for heteroskedasticity
+arch_test <- ArchTest(log_returns[[stock]], lags = 12)
+print(arch_test)
+# ADF test for stationarity
+adf_test <- adf.test(log_returns[[stock]])
+print(adf_test)
+# Identically Distributed check (Mean and SD stability)
+roll_mean <- rollapply(log_returns[[stock]], width = 50, FUN = mean, fill = NA, align = "right")
+roll_sd <- rollapply(log_returns[[stock]], width = 50, FUN = sd, fill = NA, align = "right")
+mean_volatility <- sd(na.omit(roll_mean))
+vol_volatility <- sd(na.omit(roll_sd))
+cat("Identically Distributed Check - Mean Volatility:", mean_volatility, "\n")
+cat("Identically Distributed Check - SD Volatility:", vol_volatility, "\n")
+}
+# Now, check assumptions for one stock (e.g., "PAGE")
+check_assumptions("PAGE")
+library(ggplot2)
+library(zoo)
+# Select the log returns for PAGE
+log_returns_PAGE <- log_returns$PAGE
+ggplot(data.frame(log_returns_PAGE), aes(x = log_returns_PAGE)) +
+geom_histogram(bins = 30, fill = "skyblue", color = "black", alpha = 0.7) +
+ggtitle("Histogram of Log Returns (PAGE)") +
+xlab("Log Returns") +
+ylab("Frequency")
+qqnorm(log_returns_PAGE, main = "Q-Q Plot of Log Returns (PAGE)")
+qqline(log_returns_PAGE, col = "red")
+par(mfrow = c(1, 2))
+acf(log_returns_PAGE, main = "ACF of Log Returns (PAGE)")
+roll_mean_PAGE <- rollapply(log_returns_PAGE, width = 50, FUN = mean, fill = NA, align = "right")
+ggplot(data.frame(Date = index(roll_mean_PAGE), Roll_Mean = roll_mean_PAGE), aes(x = Date, y = Roll_Mean)) +
+geom_line(color = "blue") +
+ggtitle("50-Period Rolling Mean of Log Returns (PAGE)") +
+xlab("Date") +
+ylab("Rolling Mean")
+roll_sd_PAGE <- rollapply(log_returns_PAGE, width = 50, FUN = sd, fill = NA, align = "right")
+ggplot(data.frame(Date = index(roll_sd_PAGE), Roll_SD = roll_sd_PAGE), aes(x = Date, y = Roll_SD)) +
+geom_line(color = "red") +
+ggtitle("50-Period Rolling Standard Deviation of Log Returns (PAGE)") +
+xlab("Date") +
+ylab("Rolling Standard Deviation")
+sq_log_returns_PAGE <- log_returns_PAGE^2
+# ACF of Squared Log Returns (ARCH Effects)
+acf(sq_log_returns_PAGE, main = "ACF of Squared Log Returns (PAGE)")
+sq_log_returns_PAGE <- log_returns_PAGE^2
+# ACF of Squared Log Returns (ARCH Effects)
+acf(sq_log_returns_PAGE, main = "ACF of Squared Log Returns (PAGE)")
+# Select the log returns for COFORGE
+log_returns_COFORGE <- log_returns$COFORGE
+# 1. Shapiro-Wilk Normality Test
+cat("\n\n==================== Normality Test for COFORGE =====================\n")
+norm_test_COFORGE <- shapiro.test(log_returns_COFORGE)
+print(norm_test_COFORGE)
+# 2. Box-Ljung Test for Independence (i.i.d.)
+cat("\n\n==================== Box-Ljung Test for Independence =====================\n")
+lb_test_COFORGE <- Box.test(log_returns_COFORGE, lag = 20, type = "Ljung-Box")
+print(lb_test_COFORGE)
+# 3. Rolling Mean and Rolling Standard Deviation (Constant Mean and Volatility)
+# Rolling Mean
+roll_mean_COFORGE <- rollapply(log_returns_COFORGE, width = 50, FUN = mean, fill = NA, align = "right")
+cat("\nRolling Mean for COFORGE: ", mean(roll_mean_COFORGE, na.rm = TRUE), "\n")
+# Rolling Standard Deviation
+roll_sd_COFORGE <- rollapply(log_returns_COFORGE, width = 50, FUN = sd, fill = NA, align = "right")
+cat("\nRolling Standard Deviation for COFORGE: ", mean(roll_sd_COFORGE, na.rm = TRUE), "\n")
+# 4. ARCH LM-test (Volatility Clustering)
+cat("\n\n==================== ARCH LM Test for COFORGE =====================\n")
+arch_test_COFORGE <- ArchTest(log_returns_COFORGE, lags = 12)
+print(arch_test_COFORGE)
+# 5. Augmented Dickey-Fuller Test (Stationarity)
+cat("\n\n==================== ADF Test for COFORGE =====================\n")
+adf_COFORGE <- adf.test(log_returns_COFORGE)
+print(adf_COFORGE)
+# 6. Identically Distributed Check - Mean Volatility and SD Volatility
+cat("\n\n==================== Identically Distributed Check for COFORGE =====================\n")
+mean_vol_COFORGE <- mean(log_returns_COFORGE, na.rm = TRUE)
+sd_vol_COFORGE <- sd(log_returns_COFORGE, na.rm = TRUE)
+cat("\nIdentically Distributed Check - Mean Volatility: ", mean_vol_COFORGE, "\n")
+cat("Identically Distributed Check - SD Volatility: ", sd_vol_COFORGE, "\n")
+check_assumptions <- function(stock) {
+cat("\n\nChecking assumptions for stock:", stock, "\n\n")
+# Normality test
+norm_test <- shapiro.test(log_returns[[stock]])
+print(norm_test)
+# Ljung-Box test for independence
+lb_test <- Box.test(log_returns[[stock]], lag = 20, type = "Ljung-Box")
+print(lb_test)
+# Constant Mean test
+roll_mean <- rollapply(log_returns[[stock]], width = 50, FUN = mean, fill = NA, align = "right")
+mean_volatility <- sd(na.omit(roll_mean))
+cat("Constant Mean Volatility:", mean_volatility, "\n")
+# Constant Volatility test
+roll_sd <- rollapply(log_returns[[stock]], width = 50, FUN = sd, fill = NA, align = "right")
+vol_volatility <- sd(na.omit(roll_sd))
+cat("Constant Volatility:", vol_volatility, "\n")
+# ARCH test for heteroskedasticity
+arch_test <- ArchTest(log_returns[[stock]], lags = 12)
+print(arch_test)
+# ADF test for stationarity
+adf_test <- adf.test(log_returns[[stock]])
+print(adf_test)
+# Identically Distributed check (Mean and SD stability)
+roll_mean <- rollapply(log_returns[[stock]], width = 50, FUN = mean, fill = NA, align = "right")
+roll_sd <- rollapply(log_returns[[stock]], width = 50, FUN = sd, fill = NA, align = "right")
+mean_volatility <- sd(na.omit(roll_mean))
+vol_volatility <- sd(na.omit(roll_sd))
+cat("Identically Distributed Check - Mean Volatility:", mean_volatility, "\n")
+cat("Identically Distributed Check - SD Volatility:", vol_volatility, "\n")
+}
+# Now, check assumptions for COFORGE
+check_assumptions("COFORGE")
+check_assumptions("BHARAT")
+check_assumptions("AJANTA")
+check_assumptions("PAGE")
+savehistory("~/Desktop/MathFinEco/MP4 /1.1/Q1 Codessssszzz.Rhistory")
+ggplot(data.frame(log_returns_COFORGE), aes(x = log_returns_COFORGE)) +
+geom_histogram(bins = 30, fill = "skyblue", color = "black", alpha = 0.7) +
+ggtitle("Histogram of Log Returns (COFORGE)") +
+xlab("Log Returns") +
+ylab("Frequency")
+qqnorm(log_returns_COFORGE, main = "Q-Q Plot of Log Returns (COFORGE)")
+qqline(log_returns_COFORGE, col = "red")
+qqnorm(log_returns_COFORGE, main = "Q-Q Plot of Log Returns (COFORGE)")
+qqline(log_returns_COFORGE, col = "red")
+par(mfrow = c(1, 2))
+# ACF Plot
+acf(log_returns_COFORGE, main = "ACF of Log Returns (COFORGE)")
+ggplot(data.frame(Date = index(roll_mean_COFORGE), Roll_Mean = roll_mean_COFORGE), aes(x = Date, y = Roll_Mean)) +
+geom_line(color = "blue") +
+ggtitle("50-Period Rolling Mean of Log Returns (COFORGE)") +
+xlab("Date") +
+ylab("Rolling Mean")
+ggplot(data.frame(Date = index(roll_sd_COFORGE), Roll_SD = roll_sd_COFORGE), aes(x = Date, y = Roll_SD)) +
+geom_line(color = "red") +
+ggtitle("50-Period Rolling Standard Deviation of Log Returns (COFORGE)") +
+xlab("Date") +
+ylab("Rolling Standard Deviation")
+sq_log_returns_COFORGE <- log_returns_COFORGE^2
+# ACF of Squared Log Returns (ARCH Effects)
+acf(sq_log_returns_COFORGE, main = "ACF of Squared Log Returns (COFORGE)")
+sq_log_returns_COFORGE <- log_returns_COFORGE^2
+# ACF of Squared Log Returns (ARCH Effects)
+acf(sq_log_returns_COFORGE, main = "ACF of Squared Log Returns (COFORGE)")
+log_returns_BHARAT <- log_returns$BHARAT
+# Load required library
+library(ggplot2)
+library(zoo)
+ggplot(data.frame(log_returns_BHARAT), aes(x = log_returns_BHARAT)) +
+geom_histogram(bins = 30, fill = "skyblue", color = "black", alpha = 0.7) +
+ggtitle("Histogram of Log Returns (BHARAT)") +
+xlab("Log Returns") +
+ylab("Frequency")
+qqnorm(log_returns_BHARAT, main = "Q-Q Plot of Log Returns (BHARAT)")
+qqline(log_returns_BHARAT, col = "red")
+qqnorm(log_returns_BHARAT, main = "Q-Q Plot of Log Returns (BHARAT)")
+qqline(log_returns_BHARAT, col = "red")
+par(mfrow = c(1, 2))  # 2 plots side by side
+acf(log_returns_BHARAT, main = "ACF of Log Returns (BHARAT)")
+roll_mean_BHARAT <- rollapply(log_returns_BHARAT, width = 50, FUN = mean, fill = NA, align = "right")
+roll_sd_BHARAT <- rollapply(log_returns_BHARAT, width = 50, FUN = sd, fill = NA, align = "right")
+# Rolling Mean
+ggplot(data.frame(Date = index(roll_mean_BHARAT), Roll_Mean = roll_mean_BHARAT), aes(x = Date, y = Roll_Mean)) +
+geom_line(color = "blue") +
+ggtitle("50-Period Rolling Mean of Log Returns (BHARAT)") +
+xlab("Date") +
+ylab("Rolling Mean")
+ggplot(data.frame(Date = index(roll_sd_BHARAT), Roll_SD = roll_sd_BHARAT), aes(x = Date, y = Roll_SD)) +
+geom_line(color = "red") +
+ggtitle("50-Period Rolling Standard Deviation of Log Returns (BHARAT)") +
+xlab("Date") +
+ylab("Rolling Standard Deviation")
+ggplot(data.frame(log_returns_AJANTA), aes(x = log_returns_AJANTA)) +
+geom_histogram(bins = 30, fill = "skyblue", color = "black", alpha = 0.7) +
+ggtitle("Histogram of Log Returns (AJANTA)") +
+xlab("Log Returns") +
+ylab("Frequency")
+ggplot(data.frame(log_returns_AJANTA), aes(x = log_returns_AJANTA)) +
+geom_histogram(bins = 30, fill = "skyblue", color = "black", alpha = 0.7) +
+ggtitle("Histogram of Log Returns (AJANTA)") +
+xlab("Log Returns") +
+ylab("Frequency")
+log_returns_AJANTA <- log_returns$AJANTA
+# Load required libraries
+library(ggplot2)
+library(zoo)
+# 7.1 Histogram and Q-Q Plot (Normality Test)
+# Histogram
+ggplot(data.frame(log_returns_AJANTA), aes(x = log_returns_AJANTA)) +
+geom_histogram(bins = 30, fill = "skyblue", color = "black", alpha = 0.7) +
+ggtitle("Histogram of Log Returns (AJANTA)") +
+xlab("Log Returns") +
+ylab("Frequency")
+qqnorm(log_returns_AJANTA, main = "Q-Q Plot of Log Returns (AJANTA)")
+qqline(log_returns_AJANTA, col = "red")
+qqnorm(log_returns_AJANTA, main = "Q-Q Plot of Log Returns (AJANTA)")
+qqline(log_returns_AJANTA, col = "red")
+# 7.2 ACF and PACF (Independence Test)
+par(mfrow = c(1, 2))  # 2 plots side by side
+acf(log_returns_AJANTA, main = "ACF of Log Returns (AJANTA)")
+# 7.3 Rolling Mean and Rolling Standard Deviation (Constant Mean and Volatility)
+roll_mean_AJANTA <- rollapply(log_returns_AJANTA, width = 50, FUN = mean, fill = NA, align = "right")
+roll_sd_AJANTA <- rollapply(log_returns_AJANTA, width = 50, FUN = sd, fill = NA, align = "right")
+# Rolling Mean
+ggplot(data.frame(Date = index(roll_mean_AJANTA), Roll_Mean = roll_mean_AJANTA), aes(x = Date, y = Roll_Mean)) +
+geom_line(color = "blue") +
+ggtitle("50-Period Rolling Mean of Log Returns (AJANTA)") +
+xlab("Date") +
+ylab("Rolling Mean")
+ggplot(data.frame(Date = index(roll_sd_AJANTA), Roll_SD = roll_sd_AJANTA), aes(x = Date, y = Roll_SD)) +
+geom_line(color = "red") +
+ggtitle("50-Period Rolling Standard Deviation of Log Returns (AJANTA)") +
+xlab("Date") +
+ylab("Rolling Standard Deviation")
+# Load required libraries
+library(ggplot2)
+# 1. Choose the stock
+stock_name <- "COFORGE"
+log_ret <- log_returns[[stock_name]]
+actual_prices <- Stock_Prices_1[[stock_name]]
+S0 <- actual_prices[1]
+n_days <- length(actual_prices) - 1
+mu <- mean(log_ret, na.rm = TRUE)
+sigma <- sd(log_ret, na.rm = TRUE)
+set.seed(123)  # For reproducibility
+dt <- 1
+epsilon <- rnorm(n_days, mean = 0, sd = 1)
+log_returns_sim <- (mu - 0.5 * sigma^2) * dt + sigma * sqrt(dt) * epsilon
+sim_prices <- S0 * exp(cumsum(log_returns_sim))
+gbm_df <- data.frame(
+Day = 2:(n_days + 1),
+Actual = actual_prices[2:(n_days + 1)],
+Simulated = sim_prices
+)
+ggplot(gbm_df, aes(x = Day)) +
+geom_line(aes(y = Actual, color = "Actual Price")) +
+geom_line(aes(y = Simulated, color = "Simulated Price"), linetype = "dashed") +
+scale_color_manual(values = c("Actual Price" = "black", "Simulated Price" = "red")) +
+labs(title = paste("GBM Simulation vs Actual Prices -", stock_name),
+y = "Price", color = "") +
+theme_minimal()
+gbm_df$MSE <- (gbm_df$Simulated - gbm_df$Actual)^2
+ggplot(gbm_df, aes(x = Day, y = MSE)) +
+geom_line(color = "blue") +
+labs(title = paste("MSE Over Time -", stock_name),
+y = "Mean Squared Error", x = "Day") +
+theme_minimal()
+savehistory("~/Desktop/MathFinEco/MP4 /1.1/codes2.Rhistory")
+
+
+
+
+
+
+# PART 2 :  Volatility Estimation of Daily Returns 
+
+library(readxl)
+Stock_Prices_2 <- read_excel("C:/Users/arush/Downloads/Stock Prices 2.xlsx")
+View(Stock_Prices_2)
+
+
+library(readxl)
+library(dplyr)
+library(lubridate)
+
+# Load the data
+Stock_Prices_2 <- read_excel("C:/Users/arush/Downloads/Stock Prices 2.xlsx")
+Stock_Prices_2$Date <- as.Date(Stock_Prices_2$Date)
+
+# Company names
+companies <- c("TCS", "INFY", "ASIANPAINT", "BAJAJ-AUTO")
+
+# Initialize list to hold all time series
+time_series_list <- list()
+
+# Years to loop over
+years <- 2014:2018
+
+# Loop through each company and year
+for (company in companies) {
+  for (year in years) {
+    # Define base start date
+    start_date <- as.Date(paste0(year, "-02-10"))
+    
+    # 6-month period
+    end_6m <- start_date %m+% months(6) - days(1)
+    ts_6m <- Stock_Prices_2 %>%
+      filter(Date >= start_date & Date <= end_6m) %>%
+      select(Date, all_of(company))
+    time_series_list[[paste(company, year, "6m", sep = "_")]] <- ts_6m
+
+    # 9-month period
+    end_9m <- start_date %m+% months(9) - days(1)
+    ts_9m <- Stock_Prices_2 %>%
+      filter(Date >= start_date & Date <= end_9m) %>%
+      select(Date, all_of(company))
+    time_series_list[[paste(company, year, "9m", sep = "_")]] <- ts_9m
+
+    # Full year (until Dec 31 or Dec 27 if safer)
+    end_yr <- as.Date(paste0(year, "-12-31"))
+    ts_yr <- Stock_Prices_2 %>%
+      filter(Date >= start_date & Date <= end_yr) %>%
+      select(Date, all_of(company))
+    time_series_list[[paste(company, year, "full", sep = "_")]] <- ts_yr
+  }
+  
+  # Entire time horizon for each company
+  full_ts <- Stock_Prices_2 %>%
+    filter(Date >= as.Date("2014-02-10") & Date <= as.Date("2018-12-27")) %>%
+    select(Date, all_of(company))
+  time_series_list[[paste(company, "2014_2018_full", sep = "_")]] <- full_ts
+}
+
+# ✅ Print summary to verify
+cat("Total time series created:", length(time_series_list), "\n")
+cat("Time series names:\n")
+print(names(time_series_list))
+
+# ---------------------------
+# Raw Data Cleaning Section (Enhanced)
+# ---------------------------
+
+library(zoo)  # for na.approx()
+
+# Step 1: Rename columns to standard names (Date + Close)
+split_list <- lapply(time_series_list, function(df) {
+  colnames(df) <- c("Date", "Close")
+  return(df)
+})
+
+# Step 2: Define the cleaning function (IQR + Z-score + Smoothing)
+clean_price_series <- function(df) {
+  df_clean <- df %>%
+    arrange(Date) %>%
+
+    # Interpolate missing values
+    mutate(Close_Cleaned = na.approx(Close, rule = 2))
+
+  # IQR-based outlier detection and replacement with mean
+  Q1 <- quantile(df_clean$Close_Cleaned, 0.25, na.rm = TRUE)
+  Q3 <- quantile(df_clean$Close_Cleaned, 0.75, na.rm = TRUE)
+  IQR <- Q3 - Q1
+  Lower <- Q1 - 1.5 * IQR
+  Upper <- Q3 + 1.5 * IQR
+  mean_val <- mean(df_clean$Close_Cleaned, na.rm = TRUE)
+
+  df_clean <- df_clean %>%
+    mutate(Close_Cleaned = ifelse(Close_Cleaned < Lower | Close_Cleaned > Upper,
+                                  mean_val, Close_Cleaned))
+
+  # Z-score method (threshold of 3)
+  z_scores <- scale(df_clean$Close_Cleaned)
+  df_clean$Close_Cleaned <- ifelse(abs(z_scores) > 3, mean_val, df_clean$Close_Cleaned)
+
+  # Smoothing sudden spikes using rolling mean (optional)
+  df_clean$Close_Cleaned <- rollapply(df_clean$Close_Cleaned, width = 3, FUN = mean, fill = NA, align = "center")
+  df_clean$Close_Cleaned <- na.approx(df_clean$Close_Cleaned, rule = 2)  # re-interpolate after smoothing
+
+  # Final output
+  df_clean <- df_clean %>%
+    select(Date, Close = Close_Cleaned)
+
+  return(df_clean)
+}
+
+# Step 3: Apply cleaning function to all series
+cleaned_price_list <- lapply(split_list, clean_price_series)
+
+# Step 4: Verify success
+cat("Total cleaned price series created:", length(cleaned_price_list), "\n")
+print(names(cleaned_price_list)[1:5])  # Preview
+
+library(dplyr)
+library(moments)   # For skewness and kurtosis
+library(zoo)       # For handling NAs (e.g., na.locf)
+
+# Lists to store processed log return time series and statistics
+log_return_list <- list()
+descriptive_stats <- data.frame()
+
+# 2.1 Function to compute log returns
+compute_log_returns <- function(df) {
+  df <- df %>% arrange(Date)
+  df$log_return <- c(NA, diff(log(df[[2]])))
+  return(df)
+}
+
+# 2.2 Function to replace outliers using Z-score method
+replace_outliers <- function(vec, threshold = 3) {
+  z_scores <- scale(vec)
+  vec[abs(z_scores) > threshold] <- mean(vec, na.rm = TRUE)
+  return(vec)
+}
+
+# 2.3 Function to calculate detailed descriptive statistics
+get_descriptive_stats <- function(vec, series_name) {
+  stats <- data.frame(
+    Series = series_name,
+    Count = length(vec),
+    Missing = sum(is.na(vec)),
+    Mean = mean(vec, na.rm = TRUE),
+    SD = sd(vec, na.rm = TRUE),
+    Min = min(vec, na.rm = TRUE),
+    Q1 = quantile(vec, 0.25, na.rm = TRUE),
+    Median = median(vec, na.rm = TRUE),
+    Q3 = quantile(vec, 0.75, na.rm = TRUE),
+    Max = max(vec, na.rm = TRUE),
+    Skewness = skewness(vec, na.rm = TRUE),
+    Kurtosis = kurtosis(vec, na.rm = TRUE),
+    Variance = var(vec, na.rm = TRUE),
+    SE_Mean = sd(vec, na.rm = TRUE) / sqrt(length(na.omit(vec)))
+  )
+  return(stats)
+}
+
+for (series_name in names(time_series_list)) {
+  ts_df <- time_series_list[[series_name]]
+
+  # Step 3.1: Calculate log returns
+  ts_df <- compute_log_returns(ts_df)
+
+  # Step 3.2: Handle missing values using forward/backward fill
+  ts_df$log_return <- na.locf(ts_df$log_return, na.rm = FALSE)      # Forward fill
+  ts_df$log_return <- na.locf(ts_df$log_return, fromLast = TRUE)    # Backward fill
+
+  # Step 3.3: Replace outliers in log returns
+  ts_df$log_return <- replace_outliers(ts_df$log_return)
+
+  # Step 3.4: Compute descriptive statistics
+  stats <- get_descriptive_stats(ts_df$log_return, series_name)
+  descriptive_stats <- rbind(descriptive_stats, stats)
+
+  # Step 3.5: Save cleaned time series
+  log_return_list[[series_name]] <- ts_df
+}
+
+# Check how many series were processed
+cat("Total log return series created:", length(log_return_list), "\n")
+
+# Preview the descriptive statistics
+print(head(descriptive_stats))
+
+# Optional: view a specific time series
+# View(log_return_list[["TCS_2014_6m"]])
+
+# Export to CSV
+write.csv(descriptive_stats, "descriptive_statistics_all_series.csv", row.names = FALSE)
+
+# Or export to Excel (needs openxlsx or writexl package)
+# install.packages("writexl")  # if not installed
+library(writexl)
+write_xlsx(descriptive_stats, "descriptive_statistics_all_series.xlsx")
+
+# Install if needed
+install.packages(c("tseries", "FinTS", "forecast", "moments"))
+
+# Load libraries
+library(tseries)
+library(FinTS)
+library(forecast)
+library(moments)
+
+# Run diagnostics on TCS series correctly
+tcs_diagnostics <- do.call(rbind, lapply(names(tcs_series), function(name) {
+  series_df <- tcs_series[[name]]
+  log_returns <- series_df$log_return  # extract numeric vector
+  run_garch_diagnostics(name, log_returns)
+}))
+
+# Function to run all GARCH diagnostic tests on one series
+run_garch_diagnostics <- function(series_name, return_series) {
+  result <- list()
+  result$Series <- series_name
+
+  if (!is.numeric(return_series) || length(return_series) < 20) {
+    result$ADF_pvalue <- NA
+    result$LB_returns_pvalue <- NA
+    result$LB_sq_returns_pvalue <- NA
+    result$ARCH_LM_pvalue <- NA
+    result$JB_pvalue <- NA
+    return(as.data.frame(result))
+  }
+
+  result$ADF_pvalue <- tryCatch(tseries::adf.test(return_series)$p.value, error = function(e) NA)
+  result$LB_returns_pvalue <- tryCatch(Box.test(return_series, lag = 10, type = "Ljung-Box")$p.value, error = function(e) NA)
+  result$LB_sq_returns_pvalue <- tryCatch(Box.test(return_series^2, lag = 10, type = "Ljung-Box")$p.value, error = function(e) NA)
+  result$ARCH_LM_pvalue <- tryCatch(FinTS::ArchTest(return_series, lags = 10)$p.value, error = function(e) NA)
+  result$JB_pvalue <- tryCatch(tseries::jarque.bera.test(return_series)$p.value, error = function(e) NA)
+
+  return(as.data.frame(result))
+}
+
+# Now apply this function to all TCS time series
+tcs_series <- log_return_list[grepl("^TCS", names(log_return_list))]
+
+tcs_diagnostics <- do.call(rbind, lapply(names(tcs_series), function(name) {
+  df <- tcs_series[[name]]
+  log_returns <- df$log_return
+  run_garch_diagnostics(name, log_returns)
+}))
+
+# View and/or export the results
+View(tcs_diagnostics)
+write.csv(tcs_diagnostics, "tcs_diagnostics_results.csv", row.names = FALSE)
+
+# Load required libraries
+library(tseries)
+library(FinTS)
+library(moments)
+library(dplyr)
+
+# Initialize results data frame
+infy_results <- data.frame()
+
+# Loop over all INFY log return series
+for (name in names(log_return_list)) {
+  if (grepl("INFY", name)) {
+    series <- na.omit(log_return_list[[name]]$log_return)
+    
+    # ADF Test for stationarity
+    adf_p <- tryCatch(adf.test(series)$p.value, error = function(e) NA)
+    
+    # Ljung-Box test on returns (check autocorrelation)
+    lb_ret_p <- tryCatch(Box.test(series, lag = 10, type = "Ljung-Box")$p.value, error = function(e) NA)
+    
+    # Ljung-Box test on squared returns (check for ARCH effect)
+    lb_sqret_p <- tryCatch(Box.test(series^2, lag = 10, type = "Ljung-Box")$p.value, error = function(e) NA)
+    
+    # ARCH LM Test (alternative ARCH effect test)
+    arch_p <- tryCatch(ArchTest(series, lags = 10)$p.value, error = function(e) NA)
+    
+    # Jarque-Bera Test for normality
+    jb_p <- tryCatch(jarque.test(series)$p.value, error = function(e) NA)
+    
+    # Combine results
+    infy_results <- rbind(infy_results, data.frame(
+      Series = name,
+      ADF_pvalue = round(adf_p, 4),
+      LB_returns_pvalue = round(lb_ret_p, 4),
+      LB_sq_returns_pvalue = round(lb_sqret_p, 4),
+      ARCH_LM_pvalue = round(arch_p, 4),
+      JB_pvalue = round(jb_p, 4)
+    ))
+  }
+}
+
+# Print preview
+print(head(infy_results))
+
+# Optional: View all in the RStudio viewer
+# View(infy_results)
+
+# Optional: Save to Excel
+library(writexl)
+write_xlsx(infy_results, "INFY_assumption_tests.xlsx")
+
+
+# Load required libraries (only once is needed, skip if already loaded)
+library(tseries)
+library(FinTS)
+library(moments)
+library(dplyr)
+
+# Initialize results data frame
+asianpaint_results <- data.frame()
+
+# Loop over all ASIANPAINT log return series
+for (name in names(log_return_list)) {
+  if (grepl("ASIANPAINT", name)) {
+    series <- na.omit(log_return_list[[name]]$log_return)
+    
+    # ADF Test (stationarity)
+    adf_p <- tryCatch(adf.test(series)$p.value, error = function(e) NA)
+    
+    # Ljung-Box test on returns
+    lb_ret_p <- tryCatch(Box.test(series, lag = 10, type = "Ljung-Box")$p.value, error = function(e) NA)
+    
+    # Ljung-Box test on squared returns
+    lb_sqret_p <- tryCatch(Box.test(series^2, lag = 10, type = "Ljung-Box")$p.value, error = function(e) NA)
+    
+    # ARCH LM Test
+    arch_p <- tryCatch(ArchTest(series, lags = 10)$p.value, error = function(e) NA)
+    
+    # Jarque-Bera Test for normality
+    jb_p <- tryCatch(jarque.test(series)$p.value, error = function(e) NA)
+    
+    # Combine results
+    asianpaint_results <- rbind(asianpaint_results, data.frame(
+      Series = name,
+      ADF_pvalue = round(adf_p, 4),
+      LB_returns_pvalue = round(lb_ret_p, 4),
+      LB_sq_returns_pvalue = round(lb_sqret_p, 4),
+      ARCH_LM_pvalue = round(arch_p, 4),
+      JB_pvalue = round(jb_p, 4)
+    ))
+  }
+}
+
+# Print preview
+print(head(asianpaint_results))
+
+# Optional: View all in the RStudio viewer
+# View(asianpaint_results)
+
+# Optional: Save to Excel
+library(writexl)
+write_xlsx(asianpaint_results, "ASIANPAINT_assumption_tests.xlsx")
+
+# Load required libraries (if not already loaded)
+library(tseries)
+library(FinTS)
+library(moments)
+library(dplyr)
+
+# Initialize results data frame
+bajaj_results <- data.frame()
+
+# Loop over all BAJAJ-AUTO log return series
+for (name in names(log_return_list)) {
+  if (grepl("BAJAJ-AUTO", name)) {
+    series <- na.omit(log_return_list[[name]]$log_return)
+    
+    # ADF Test (stationarity)
+    adf_p <- tryCatch(adf.test(series)$p.value, error = function(e) NA)
+    
+    # Ljung-Box test on returns
+    lb_ret_p <- tryCatch(Box.test(series, lag = 10, type = "Ljung-Box")$p.value, error = function(e) NA)
+    
+    # Ljung-Box test on squared returns
+    lb_sqret_p <- tryCatch(Box.test(series^2, lag = 10, type = "Ljung-Box")$p.value, error = function(e) NA)
+    
+    # ARCH LM Test
+    arch_p <- tryCatch(ArchTest(series, lags = 10)$p.value, error = function(e) NA)
+    
+    # Jarque-Bera Test for normality
+    jb_p <- tryCatch(jarque.test(series)$p.value, error = function(e) NA)
+    
+    # Combine results
+    bajaj_results <- rbind(bajaj_results, data.frame(
+      Series = name,
+      ADF_pvalue = round(adf_p, 4),
+      LB_returns_pvalue = round(lb_ret_p, 4),
+      LB_sq_returns_pvalue = round(lb_sqret_p, 4),
+      ARCH_LM_pvalue = round(arch_p, 4),
+      JB_pvalue = round(jb_p, 4)
+    ))
+  }
+}
+
+# Print preview
+print(head(bajaj_results))
+
+# Optional: View in viewer
+# View(bajaj_results)
+
+# Optional: Save to Excel
+# library(writexl)
+# write_xlsx(bajaj_results, "BAJAJ_AUTO_assumption_tests.xlsx")
+
+# Load required libraries
+library(rugarch)
+library(dplyr)
+
+# Filter log return series for TCS
+tcs_log_returns <- log_return_list[grepl("^TCS", names(log_return_list))]
+
+# Initialize data frame to store results
+tcs_vol_results <- data.frame(
+  Series = character(),
+  Daily_Volatility = numeric(),
+  Annualized_Volatility = numeric(),
+  stringsAsFactors = FALSE
+)
+
+# Define GARCH(1,1) specification
+garch_spec <- ugarchspec(
+  variance.model = list(model = "sGARCH", garchOrder = c(1, 1)),
+  mean.model = list(armaOrder = c(0, 0), include.mean = TRUE),
+  distribution.model = "norm"
+)
+
+# Fit GARCH(1,1) to each TCS series and compute volatilities
+for (series_name in names(tcs_log_returns)) {
+  data <- na.omit(tcs_log_returns[[series_name]]$log_return)
+  
+  # Fit GARCH
+  fit <- tryCatch({
+    ugarchfit(spec = garch_spec, data = data, solver = "hybrid")
+  }, error = function(e) return(NULL))
+  
+  if (!is.null(fit)) {
+    cond_vol <- sigma(fit) # Conditional daily volatility estimates
+    avg_daily_vol <- mean(cond_vol, na.rm = TRUE)
+    ann_vol <- avg_daily_vol * sqrt(252)
+    
+    tcs_vol_results <- rbind(tcs_vol_results, data.frame(
+      Series = series_name,
+      Daily_Volatility = round(avg_daily_vol, 6),
+      Annualized_Volatility = round(ann_vol, 6)
+    ))
+  }
+}
+
+# View results
+print(tcs_vol_results)
+
+# Optional: Save to Excel
+# install.packages("writexl")  # if not already installed
+library(writexl)
+write_xlsx(tcs_vol_results, "TCS_GARCH_Annualized_Volatilities.xlsx")
+
+# Load necessary libraries
+library(rugarch)
+library(dplyr)
+library(writexl)
+
+# Filter log return series for INFY
+infy_log_returns <- log_return_list[grepl("^INFY", names(log_return_list))]
+
+# Initialize results data frame
+infy_vol_results <- data.frame(
+  Series = character(),
+  Daily_Volatility = numeric(),
+  Annualized_Volatility = numeric(),
+  stringsAsFactors = FALSE
+)
+
+# Define GARCH(1,1) specification
+garch_spec <- ugarchspec(
+  variance.model = list(model = "sGARCH", garchOrder = c(1, 1)),
+  mean.model = list(armaOrder = c(0, 0), include.mean = TRUE),
+  distribution.model = "norm"
+)
+
+# Loop through each series and compute volatility
+for (series_name in names(infy_log_returns)) {
+  data <- na.omit(infy_log_returns[[series_name]]$log_return)
+  
+  # Fit GARCH model
+  fit <- tryCatch({
+    ugarchfit(spec = garch_spec, data = data, solver = "hybrid")
+  }, error = function(e) return(NULL))
+  
+  if (!is.null(fit)) {
+    cond_vol <- sigma(fit)
+    avg_daily_vol <- mean(cond_vol, na.rm = TRUE)
+    ann_vol <- avg_daily_vol * sqrt(252)
+    
+    infy_vol_results <- rbind(infy_vol_results, data.frame(
+      Series = series_name,
+      Daily_Volatility = round(avg_daily_vol, 6),
+      Annualized_Volatility = round(ann_vol, 6)
+    ))
+  }
+}
+
+# View results
+print(infy_vol_results)
+
+# Optional: export to Excel
+write_xlsx(infy_vol_results, "INFY_GARCH_Annualized_Volatilities.xlsx")
+
+# Load necessary libraries
+library(rugarch)
+library(dplyr)
+library(writexl)
+
+# Filter log return series for ASIANPAINT
+asianpaint_log_returns <- log_return_list[grepl("^ASIANPAINT", names(log_return_list))]
+
+# Initialize results data frame
+asianpaint_vol_results <- data.frame(
+  Series = character(),
+  Daily_Volatility = numeric(),
+  Annualized_Volatility = numeric(),
+  stringsAsFactors = FALSE
+)
+
+# Define GARCH(1,1) specification
+garch_spec <- ugarchspec(
+  variance.model = list(model = "sGARCH", garchOrder = c(1, 1)),
+  mean.model = list(armaOrder = c(0, 0), include.mean = TRUE),
+  distribution.model = "norm"
+)
+
+# Loop through each ASIANPAINT log return series
+for (series_name in names(asianpaint_log_returns)) {
+  data <- na.omit(asianpaint_log_returns[[series_name]]$log_return)
+  
+  # Fit GARCH(1,1) model
+  fit <- tryCatch({
+    ugarchfit(spec = garch_spec, data = data, solver = "hybrid")
+  }, error = function(e) return(NULL))
+  
+  if (!is.null(fit)) {
+    cond_vol <- sigma(fit)
+    avg_daily_vol <- mean(cond_vol, na.rm = TRUE)
+    ann_vol <- avg_daily_vol * sqrt(252)
+    
+    asianpaint_vol_results <- rbind(asianpaint_vol_results, data.frame(
+      Series = series_name,
+      Daily_Volatility = round(avg_daily_vol, 6),
+      Annualized_Volatility = round(ann_vol, 6)
+    ))
+  }
+}
+
+# View results
+print(asianpaint_vol_results)
+
+# Optional: export to Excel
+write_xlsx(asianpaint_vol_results, "ASIANPAINT_GARCH_Annualized_Volatilities.xlsx")
+
+# Load required libraries
+library(rugarch)
+library(dplyr)
+library(writexl)
+
+# Filter log return series for BAJAJ-AUTO
+bajaj_log_returns <- log_return_list[grepl("^BAJAJ\\-AUTO", names(log_return_list))]
+
+# Initialize results data frame
+bajaj_vol_results <- data.frame(
+  Series = character(),
+  Daily_Volatility = numeric(),
+  Annualized_Volatility = numeric(),
+  stringsAsFactors = FALSE
+)
+
+# Define GARCH(1,1) specification
+garch_spec <- ugarchspec(
+  variance.model = list(model = "sGARCH", garchOrder = c(1, 1)),
+  mean.model = list(armaOrder = c(0, 0), include.mean = TRUE),
+  distribution.model = "norm"
+)
+
+# Loop through each BAJAJ-AUTO log return series
+for (series_name in names(bajaj_log_returns)) {
+  data <- na.omit(bajaj_log_returns[[series_name]]$log_return)
+  
+  # Fit GARCH(1,1) model
+  fit <- tryCatch({
+    ugarchfit(spec = garch_spec, data = data, solver = "hybrid")
+  }, error = function(e) return(NULL))
+  
+  if (!is.null(fit)) {
+    cond_vol <- sigma(fit)
+    avg_daily_vol <- mean(cond_vol, na.rm = TRUE)
+    ann_vol <- avg_daily_vol * sqrt(252)
+    
+    bajaj_vol_results <- rbind(bajaj_vol_results, data.frame(
+      Series = series_name,
+      Daily_Volatility = round(avg_daily_vol, 6),
+      Annualized_Volatility = round(ann_vol, 6)
+    ))
+  }
+}
+
+# View results
+print(bajaj_vol_results)
+
+# Optional: export to Excel
+write_xlsx(bajaj_vol_results, "BAJAJ_AUTO_GARCH_Annualized_Volatilities.xlsx")
+
+library(ggplot2)
+
+# Create output folder
+dir.create("log_return_histograms", showWarnings = FALSE)
+
+# Loop to generate and save histograms
+for (series_name in names(log_return_list)) {
+  df <- log_return_list[[series_name]]
+  
+  # Skip if data is missing
+  if (nrow(df) == 0) next
+
+  # Create the histogram plot
+  p <- ggplot(df, aes(x = log_return)) +
+    geom_histogram(fill = "steelblue", color = "black", bins = 30) +
+    labs(
+      title = paste("Histogram of Log Returns:", series_name),
+      x = "Log Return",
+      y = "Frequency"
+    ) +
+    theme_light(base_size = 14) +  # Light theme with larger text
+    theme(
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+      axis.title.x = element_text(size = 14),
+      axis.title.y = element_text(size = 14)
+    )
+
+  # Save to PNG
+  ggsave(
+    filename = paste0("log_return_histograms/", series_name, ".png"),
+    plot = p,
+    width = 8, height = 6, dpi = 300, bg = "white"
+  )
+}
+
+library(rugarch)
+library(xts)
+library(dplyr)
+
+# Define GARCH(1,1) specification
+garch_spec <- ugarchspec(
+  variance.model = list(model = "sGARCH", garchOrder = c(1,1)),
+  mean.model = list(armaOrder = c(0,0), include.mean = TRUE),
+  distribution.model = "norm"
+)
+
+# Function to fit GARCH and calculate MSE
+calculate_volatility_accuracy <- function(log_return_xts) {
+  fit <- ugarchfit(spec = garch_spec, data = log_return_xts, solver = "hybrid")
+  sigma_sq <- sigma(fit)^2  # Estimated variance
+  squared_returns <- coredata(log_return_xts)^2  # Actual squared returns
+  mse <- mean((squared_returns - sigma_sq)^2, na.rm = TRUE)
+  return(list(mse = mse, vol_series = sigma(fit)))
+}
+
+# Initialize results list
+garch_results <- list()
+
+# Loop through all 64 time series in the log_return_list
+for (series_name in names(log_return_list)) {
+  data_df <- log_return_list[[series_name]]
+
+  # Ensure no NA values and convert to xts
+  clean_df <- na.omit(data_df[, c("Date", "log_return")])
+  log_return_xts <- xts(clean_df$log_return, order.by = clean_df$Date)
+
+  # Check for sufficient length
+  if (length(log_return_xts) > 100) {
+    result <- calculate_volatility_accuracy(log_return_xts)
+    garch_results[[series_name]] <- result$mse
+  } else {
+    garch_results[[series_name]] <- NA
+  }
+}
+
+# Convert results to a tidy data frame
+mse_df <- data.frame(
+  Series = names(garch_results),
+  GARCH_MSE = unlist(garch_results)
+)
+
+# View summary
+print(mse_df)
+
+# Export the results to Excel
+write_xlsx(mse_df, path = "GARCH_MSE_Results.xlsx")
+
+cat("✅ GARCH MSE results exported to 'GARCH_MSE_Results.xlsx' in your working directory.\n")
+
+
