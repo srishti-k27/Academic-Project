@@ -7,7 +7,7 @@ Projects
 1. **Portfolio Optimization & Risk-Return Analysis (CAPM & Single-Index Model)**
    - Applied CAPM for expected return estimation
    - Designed an optimized portfolio using Single-Index Model and Minimum Variance approach
-   - [View Project](portfolio-optimization/README.md)
+   - [View Project](Portfolio Optimization and Risk-Return Analysis Using CAPM & Single-Index Model)
 
 
 2. **Testing the Efficient Market Hypothesis (Econometrics)**
