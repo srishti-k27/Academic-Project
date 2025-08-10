@@ -18,5 +18,5 @@ Projects
 3. **Financial Modeling: GBM & BSM Simulation**
    - Simulated stock prices using GBM
    - Built an Excel-based Black-Scholes-Merton option pricing calculator
-   - [View Project](financial-modeling/README.md)
+   - [View Project](GBM-BSM-Financial-Modeling)
 
