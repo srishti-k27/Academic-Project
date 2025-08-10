@@ -1,7 +1,7 @@
 # Portfolio Optimization and Risk-Return Analysis Using CAPM & Single-Index Model
 
 ## Overview
-Applied CAPM to estimate expected returns and beta; designed an optimized portfolio using the Single-Index Model and Minimum Variance approach.
+Applied CAPM to estimate expected returns and beta; designed an optimized portfolio using the Single-Index Mode, Minimum Variance approach & Sharpe Ratio Maximisation.
 
 ## Methods
 - CAPM for expected return estimation
