@@ -13,7 +13,7 @@ Projects
 2. **Testing the Efficient Market Hypothesis (Econometrics)**
    - Used OLS regression to test predictability of stock returns
    - Validated econometric assumptions
-   - [View Project](market-efficiency-test/README.md)
+   - [View Project](Efficient-Market-Hypothesis-EMH-Test)
 
 3. **Financial Modeling: GBM & BSM Simulation**
    - Simulated stock prices using GBM
