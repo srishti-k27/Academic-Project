@@ -7,15 +7,16 @@ Projects
 1. **Portfolio Optimization & Risk-Return Analysis (CAPM & Single-Index Model)**
    - Applied CAPM for expected return estimation
    - Designed an optimized portfolio using Single-Index Model and Minimum Variance approach
-   - [View Project](./portfolio-optimization-capm-sim)
+   - [View Project](portfolio-optimization/README.md)
+
 
 2. **Testing the Efficient Market Hypothesis (Econometrics)**
    - Used OLS regression to test predictability of stock returns
    - Validated econometric assumptions
-   - [View Project](./emh-econometrics-analysis)
+   - [View Project](market-efficiency-test/README.md)
 
 3. **Financial Modeling: GBM & BSM Simulation**
    - Simulated stock prices using GBM
    - Built an Excel-based Black-Scholes-Merton option pricing calculator
-   - [View Project](./gbm-bsm-simulation)
+   - [View Project](financial-modeling/README.md)
 
